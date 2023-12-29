@@ -264,8 +264,22 @@ def get_all_doctors():
 def health_check():
     return jsonify({'status': 'healthy'}), 200
 
-# if __name__ == '__main__':
-#     app.run(debug=True, host='0.0.0.0', port=8012, use_reloader=False)
 
 def lambda_handler(event, context):
-    return awsgi.response(app, event, context)
+    # Use AWsgi to handle the Flask app response
+    response = awsgi.response(app, event, context)
+
+    # Modify the response structure to match your previous project
+    modified_response = {
+        "isBase64Encoded": False,
+        "statusCode": response['statusCode'],
+        "headers": { 
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "Content-Type,Authorization",
+            "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS"
+        },
+        "body": response['body']
+    }
+
+    return modified_response
