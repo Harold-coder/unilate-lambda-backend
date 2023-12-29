@@ -5,7 +5,7 @@ from sqlalchemy import or_
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 import datetime
-from aws_lambda_wsgi import adapter
+import awsgi
 from functools import wraps
 from config import SECRET_KEY
 
@@ -262,8 +262,8 @@ def get_all_doctors():
 def health_check():
     return jsonify({'status': 'healthy'}), 200
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=8012, use_reloader=False)
+# if __name__ == '__main__':
+#     app.run(debug=True, host='0.0.0.0', port=8012, use_reloader=False)
 
 def lambda_handler(event, context):
-    return adapter.response(app, event, context)
+    return awsgi.response(app, event, context)
