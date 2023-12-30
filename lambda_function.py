@@ -13,9 +13,10 @@ import os
 
 app = Flask(__name__)
 CORS(app, resources={
-    r"/doctors/*": {"origins": "http://localhost:3000"},
-    r"/delays/*": {"origins": "http://localhost:3000"}
-})
+    r"/doctors/*": {"origins": ["https://main.d2wombrdtqg6aq.amplifyapp.com"], "supports_credentials": True},
+    r"/delays/*": {"origins": ["https://main.d2wombrdtqg6aq.amplifyapp.com"], "supports_credentials": True}
+}, allow_headers=["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key", "x-access-tokens"])
+
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://admin:password@unilate-test.cl020ce0qv5c.eu-north-1.rds.amazonaws.com/unilate'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -73,7 +74,6 @@ def token_required(f):
             return jsonify({'message': 'Token is invalid!'}), 401
         return f(current_user, *args, **kwargs)
     return decorated
-
 
 # Registration endpoint
 @app.route('/doctors/register', methods=['POST'])
