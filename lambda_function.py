@@ -7,7 +7,6 @@ import jwt
 import datetime
 import awsgi
 from functools import wraps
-import json
 # from config import SECRET_KEY
 import os
 
@@ -270,10 +269,6 @@ def lambda_handler(event, context):
     # Use AWsgi to handle the Flask app response
     response = awsgi.response(app, event, context)
 
-    # Check the response status code and log details if it's a client error
-    if response['statusCode'] == 400:
-        print('Client error, check the request format and payload.')
-
     # Modify the response structure to match your previous project
     modified_response = {
         "isBase64Encoded": False,
@@ -284,12 +279,7 @@ def lambda_handler(event, context):
             "Access-Control-Allow-Headers": "Content-Type,Authorization",
             "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS"
         },
-        "body": response.get('body', '{}')  # Default to empty JSON if no body
+        "body": response['body']
     }
-
-    # If the original body was HTML (indicating an error), log it and set a JSON error message
-    if '<!DOCTYPE HTML' in modified_response['body']:
-        print('Received HTML response:', modified_response['body'])
-        modified_response['body'] = json.dumps({'error': 'Bad request'})
 
     return modified_response
