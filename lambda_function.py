@@ -88,7 +88,7 @@ def register_doctor():
     db.session.add(doctor)
     try:
         db.session.commit()
-        return jsonify({'message': 'New doctor registered'}), 201
+        return jsonify({'message': 'New doctor registered'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
