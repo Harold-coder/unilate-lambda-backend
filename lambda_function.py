@@ -61,16 +61,19 @@ def token_required(f):
     def decorated(*args, **kwargs):
         token = None
         if 'x-access-tokens' in request.headers:
-            token = request.headers['x-access-tokens']
+            token = request.headers['x-access-tokens'].strip()  # Strip to remove any accidental spaces
+            print("Received token:", token)  # Log the received token
         if not token:
             return jsonify({'message': 'Token is missing!'}), 401
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
             current_user = Doctor.query.filter_by(DoctorID=data['doctor_id']).first()
-        except:
+        except Exception as e:  # Catch and log any exceptions
+            print("Token validation error:", str(e))
             return jsonify({'message': 'Token is invalid!'}), 401
         return f(current_user, *args, **kwargs)
     return decorated
+
 
 # Registration endpoint
 @app.route('/doctors/register', methods=['POST'])
