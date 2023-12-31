@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
@@ -14,8 +14,8 @@ import os
 
 app = Flask(__name__)
 CORS(app, resources={
-    r"/doctors/*": {"origins": ["https://main.d2wombrdtqg6aq.amplifyapp.com"], "supports_credentials": True},
-    r"/delays/*": {"origins": ["https://main.d2wombrdtqg6aq.amplifyapp.com"], "supports_credentials": True}
+    r"/doctors/*": {"origins": ["https://main.d2wombrdtqg6aq.amplifyapp.com", "http://localhost:3000"], "supports_credentials": True},
+    r"/delays/*": {"origins": ["https://main.d2wombrdtqg6aq.amplifyapp.com", "http://localhost:3000"], "supports_credentials": True}
 }, allow_headers=["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key", "x-access-tokens"])
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
@@ -58,30 +58,48 @@ with app.app_context():
 
 
 # Utility function for verifying JWT tokens
+
+
+# def token_required(f):
+#     @wraps(f)
+#     def decorated(*args, **kwargs):
+#         token = request.headers.get('x-access-tokens')
+
+#         if not token:
+#             return jsonify({'message': 'Token is missing!'}), 401
+
+#         try:
+#             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+#             current_user = Doctor.query.filter_by(DoctorID=data['doctor_id']).first()
+#             if not current_user:
+#                 raise InvalidTokenError("User not found.")
+#         except ExpiredSignatureError:
+#             return jsonify({'message': 'Token has expired!'}), 401
+#         except (InvalidTokenError, DecodeError) as e:
+#             return jsonify({'message': 'Token is invalid!'}), 401
+#         except Exception as e:
+#             app.logger.error(f"Token validation error: {str(e)}")
+#             return jsonify({'message': 'Unable to validate token.'}), 500
+
+#         return f(current_user, *args, **kwargs)
+
+#     return decorated
+
+
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.headers.get('x-access-tokens')
-
+        token = request.cookies.get('token')
         if not token:
             return jsonify({'message': 'Token is missing!'}), 401
-
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
             current_user = Doctor.query.filter_by(DoctorID=data['doctor_id']).first()
-            if not current_user:
-                raise InvalidTokenError("User not found.")
-        except ExpiredSignatureError:
-            return jsonify({'message': 'Token has expired!'}), 401
-        except (InvalidTokenError, DecodeError) as e:
-            return jsonify({'message': 'Token is invalid!'}), 401
         except Exception as e:
-            app.logger.error(f"Token validation error: {str(e)}")
-            return jsonify({'message': 'Unable to validate token.'}), 500
-
+            return jsonify({'message': 'Token is invalid!'}), 401
         return f(current_user, *args, **kwargs)
-
     return decorated
+
 
 # Registration endpoint
 @app.route('/doctors/register', methods=['POST'])
@@ -105,6 +123,26 @@ def register_doctor():
         return jsonify({'error': str(e)}), 500
 
 # Login endpoint
+# @app.route('/doctors/login', methods=['POST'])
+# def login_doctor():
+#     auth = request.json
+
+#     if not auth or not auth.get('email') or not auth.get('password'):
+#         return jsonify({'message': 'Could not verify', 'WWW-Authenticate': 'Basic realm="Login required!"'}), 401
+
+#     doctor = Doctor.query.filter_by(Email=auth.get('email')).first()
+
+#     if not doctor:
+#         return jsonify({'message': 'Doctor not found', 'WWW-Authenticate': 'Basic realm="Login required!"'}), 401
+
+#     if doctor.check_password(auth.get('password')):
+#         token = jwt.encode({'doctor_id': doctor.DoctorID, 'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)}, app.config['SECRET_KEY'], algorithm="HS256")
+#         return jsonify({'token': token, 'doctor_id': doctor.DoctorID})
+
+#     return jsonify({'message': 'Could not verify', 'WWW-Authenticate': 'Basic realm="Login required!"'}), 401
+
+
+# Login endpoint
 @app.route('/doctors/login', methods=['POST'])
 def login_doctor():
     auth = request.json
@@ -114,14 +152,20 @@ def login_doctor():
 
     doctor = Doctor.query.filter_by(Email=auth.get('email')).first()
 
-    if not doctor:
-        return jsonify({'message': 'Doctor not found', 'WWW-Authenticate': 'Basic realm="Login required!"'}), 401
-
-    if doctor.check_password(auth.get('password')):
+    if doctor and doctor.check_password(auth.get('password')):
         token = jwt.encode({'doctor_id': doctor.DoctorID, 'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)}, app.config['SECRET_KEY'], algorithm="HS256")
-        return jsonify({'token': token, 'doctor_id': doctor.DoctorID})
+        response = make_response(jsonify({'message': 'Login successful'}))
+        response.set_cookie('token', token, httponly=True, samesite='Strict')
+        return response
+    else:
+        return jsonify({'message': 'Doctor not found or password is wrong'}), 401
+    
 
-    return jsonify({'message': 'Could not verify', 'WWW-Authenticate': 'Basic realm="Login required!"'}), 401
+@app.route('/logout', methods=['POST'])
+def logout():
+    response = make_response(jsonify({'message': 'Logout successful'}))
+    response.delete_cookie('token')
+    return response
 
 # Retrieve doctor info
 @app.route('/doctors/<int:doctor_id>', methods=['GET'])
