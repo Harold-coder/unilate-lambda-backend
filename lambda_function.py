@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import or_
 from werkzeug.security import generate_password_hash, check_password_hash
+from jwt import ExpiredSignatureError, InvalidTokenError, DecodeError
 import jwt
 import datetime
 import awsgi
@@ -60,19 +61,26 @@ with app.app_context():
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = None
-        if 'x-access-tokens' in request.headers:
-            token = request.headers['x-access-tokens'].strip()  # Strip to remove any accidental spaces
-            print("Received token:", token)  # Log the received token
+        token = request.headers.get('x-access-tokens')
+
         if not token:
             return jsonify({'message': 'Token is missing!'}), 401
+
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
             current_user = Doctor.query.filter_by(DoctorID=data['doctor_id']).first()
-        except Exception as e:  # Catch and log any exceptions
-            print("Token validation error:", str(e))
+            if not current_user:
+                raise InvalidTokenError("User not found.")
+        except ExpiredSignatureError:
+            return jsonify({'message': 'Token has expired!'}), 401
+        except (InvalidTokenError, DecodeError) as e:
             return jsonify({'message': 'Token is invalid!'}), 401
+        except Exception as e:
+            app.logger.error(f"Token validation error: {str(e)}")
+            return jsonify({'message': 'Unable to validate token.'}), 500
+
         return f(current_user, *args, **kwargs)
+
     return decorated
 
 # Registration endpoint
