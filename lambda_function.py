@@ -155,19 +155,22 @@ def register_doctor():
 @app.route('/doctors/login', methods=['POST'])
 def login_doctor():
     auth = request.json
-
     if not auth or not auth.get('email') or not auth.get('password'):
         return jsonify({'message': 'Could not verify', 'WWW-Authenticate': 'Basic realm="Login required!"'}), 401
 
     doctor = Doctor.query.filter_by(Email=auth.get('email')).first()
-
     if doctor and doctor.check_password(auth.get('password')):
-        token = jwt.encode({'doctor_id': doctor.DoctorID, 'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)}, app.config['SECRET_KEY'], algorithm="HS256")
+        token = jwt.encode({
+            'doctor_id': doctor.DoctorID,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+        }, app.config['SECRET_KEY'], algorithm="HS256")
         response = make_response(jsonify({'message': 'Login successful'}))
-        response.set_cookie('token', token, httponly=True, samesite='Strict')
+        # For local testing, omit Secure and SameSite=None
+        response.set_cookie('token', token, httponly=True)
         return response
     else:
         return jsonify({'message': 'Doctor not found or password is wrong'}), 401
+
     
 # Fetch doctorID after login was successful.
 @app.route('/doctors/me', methods=['GET'])
