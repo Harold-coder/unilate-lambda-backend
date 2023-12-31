@@ -166,7 +166,7 @@ def login_doctor():
         }, app.config['SECRET_KEY'], algorithm="HS256")
         response = make_response(jsonify({'message': 'Login successful'}))
         # For local testing, omit Secure and SameSite=None
-        response.set_cookie('token', token, httponly=True)
+        response.set_cookie('token', token, httponly=True, samesite='Lax', path='/')
         return response
     else:
         return jsonify({'message': 'Doctor not found or password is wrong'}), 401
