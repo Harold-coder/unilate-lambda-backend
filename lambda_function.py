@@ -95,10 +95,19 @@ def token_required(f):
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
             current_user = Doctor.query.filter_by(DoctorID=data['doctor_id']).first()
-        except Exception as e:
+            if current_user is None:
+                raise InvalidTokenError("User not found.")
+        except ExpiredSignatureError:
+            return jsonify({'message': 'Token has expired!'}), 401
+        except (InvalidTokenError, DecodeError) as e:
             return jsonify({'message': 'Token is invalid!'}), 401
+        except Exception as e:
+            return jsonify({'message': 'Unable to validate token.'}), 500
+
         return f(current_user, *args, **kwargs)
+
     return decorated
+
 
 
 # Registration endpoint
@@ -159,6 +168,23 @@ def login_doctor():
         return response
     else:
         return jsonify({'message': 'Doctor not found or password is wrong'}), 401
+    
+# Fetch doctorID after login was successful.
+@app.route('/doctors/me', methods=['GET'])
+@token_required
+def get_current_doctor(current_user):
+    # current_user is already populated by the @token_required decorator
+    # so you just need to return the necessary data
+    doctor_data = {
+        'doctor_id': current_user.DoctorID,
+        'name': current_user.Name,
+        'specialty': current_user.Specialty,
+        'city': current_user.City,
+        'email': current_user.Email,
+        'phone_number': current_user.PhoneNumber,
+        'hospital_name': current_user.HospitalName
+    }
+    return jsonify({'doctor': doctor_data}), 200
     
 
 @app.route('/logout', methods=['POST'])
