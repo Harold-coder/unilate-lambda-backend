@@ -349,22 +349,51 @@ def health_check():
     return jsonify({'status': 'healthy'}), 200
 
 
-def lambda_handler(event, context):
-    # Use AWsgi to handle the Flask app response
-    response = awsgi.response(app, event, context)
+# def lambda_handler(event, context):
+#     # Use AWsgi to handle the Flask app response
+#     response = awsgi.response(app, event, context)
 
-    # Modify the response structure to match your previous project
-    modified_response = {
+#     # Modify the response structure to match your previous project
+#     modified_response = {
+#         "isBase64Encoded": False,
+#         "statusCode": response['statusCode'],
+#         "headers": { 
+#             "Content-Type": "application/json",
+#             "Access-Control-Allow-Credentials": "true",
+#             "Access-Control-Allow-Origin": "http://localhost:3000",
+#             "Access-Control-Allow-Headers": "Content-Type,Authorization",
+#             "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS"
+#         },
+#         "body": response['body']
+#     }
+
+#     return modified_response
+
+
+
+def lambda_handler(event, context):
+    # Your existing Lambda code to handle the request and generate a response
+
+    # Example Flask app response
+    flask_response = awsgi.response(app, event, context)
+    
+    # Extract cookies from Flask response
+    cookies = flask_response.headers.getlist('Set-Cookie')
+
+    # Create the AWS Lambda response object
+    aws_lambda_response = {
         "isBase64Encoded": False,
-        "statusCode": response['statusCode'],
+        "statusCode": flask_response.status_code,
         "headers": { 
             "Content-Type": "application/json",
             "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Allow-Origin": "http://localhost:3000",
+            "Access-Control-Allow-Origin": event['headers']['Origin'], # Assuming Origin header is present
             "Access-Control-Allow-Headers": "Content-Type,Authorization",
-            "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS"
+            "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS",
+            # Include the Set-Cookie headers if there are cookies
+            **({"Set-Cookie": cookies} if cookies else {})
         },
-        "body": response['body']
+        "body": flask_response.get_data(as_text=True) # or json.dumps(response_body) if you have a response body
     }
 
-    return modified_response
+    return aws_lambda_response
