@@ -221,6 +221,28 @@ def get_doctor(doctor_id):
 
     return jsonify({'doctor': doctor_data}), 200
 
+# Retrieve doctor info
+@app.route('/doctors/private/<int:doctor_id>', methods=['GET'])
+@token_required
+def get_doctor_private(doctor_id):
+    doctor = Doctor.query.filter_by(DoctorID=doctor_id).first()
+
+    if not doctor:
+        return jsonify({'message': 'Doctor not found'}), 404
+
+    doctor_data = {
+        'id': doctor.DoctorID,
+        'name': doctor.Name,
+        'specialty': doctor.Specialty,
+        'city': doctor.City,
+        'email': doctor.Email,
+        'phone_number': doctor.PhoneNumber,
+        'hospital_name': doctor.HospitalName
+    }
+
+    return jsonify({'doctor': doctor_data}), 200
+
+
 @app.route('/doctors/<int:doctor_id>', methods=['PUT'])
 @token_required
 def update_doctor(current_user, doctor_id):
@@ -287,6 +309,22 @@ def update_delay(current_user, doctor_id):
 
 @app.route('/delays/<int:doctor_id>', methods=['GET'])
 def get_current_delay(doctor_id):
+    delay = Delay.query.filter_by(DoctorID=doctor_id).first()
+    if not delay:
+        return jsonify({'message': 'No delay entry found for this doctor'}), 404
+
+    current_delay = {
+        'doctor_id': delay.DoctorID,
+        'delay_duration': delay.DelayDuration,
+        'start_timestamp': delay.StartTimestamp,
+        'end_timestamp': delay.EndTimestamp,
+        'announcement_timestamp': delay.AnnouncementTimestamp
+    }
+    return jsonify(current_delay), 200
+
+@app.route('/delays/private/<int:doctor_id>', methods=['GET'])
+@token_required
+def get_current_delay_private(doctor_id):
     delay = Delay.query.filter_by(DoctorID=doctor_id).first()
     if not delay:
         return jsonify({'message': 'No delay entry found for this doctor'}), 404
