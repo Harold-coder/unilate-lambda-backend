@@ -359,8 +359,9 @@ def health_check():
 def lambda_handler(event, context):
     response = awsgi.response(app, event, context)
 
-    # Extract the origin from the event and set it dynamically to match the requesting origin
-    origin = event['headers'].get('origin', 'https://main.d2wombrdtqg6aq.amplifyapp.com')
+    # Check if the headers exist in the event and set the origin accordingly
+    headers = event.get('headers', {})
+    origin = headers.get('origin') if headers else 'https://main.d2wombrdtqg6aq.amplifyapp.com'
 
     # Prepare the response headers
     response_headers = {
@@ -387,6 +388,7 @@ def lambda_handler(event, context):
         modified_response['multiValueHeaders']['Set-Cookie'] = [flask_response_headers['Set-Cookie']]
 
     return modified_response
+
 
 
 
