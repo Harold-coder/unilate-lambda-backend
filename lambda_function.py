@@ -153,7 +153,6 @@ def register_doctor():
 #     return jsonify({'message': 'Could not verify', 'WWW-Authenticate': 'Basic realm="Login required!"'}), 401
 
 
-# Login endpoint
 @app.route('/doctors/login', methods=['POST'])
 def login_doctor():
     auth = request.json
@@ -167,10 +166,12 @@ def login_doctor():
             'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
         }, app.config['SECRET_KEY'], algorithm="HS256")
         response = make_response(jsonify({'message': 'Login successful'}))
-        print("Response Before:", response)
-        # For local testing, omit Secure and SameSite=None
+        # Set the cookie
         response.set_cookie('token', token, httponly=True, path='/', secure=True, samesite='None')
-        print("Response After:", response)
+        
+        # Print the Set-Cookie header if it's been set
+        print("Set-Cookie Header please daddy:", response.headers.get('Set-Cookie'))
+
         return response, 200
     else:
         return jsonify({'message': 'Doctor not found or password is wrong'}), 401
