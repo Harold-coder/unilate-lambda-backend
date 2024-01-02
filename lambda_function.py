@@ -153,7 +153,6 @@ def register_doctor():
 #     return jsonify({'message': 'Could not verify', 'WWW-Authenticate': 'Basic realm="Login required!"'}), 401
 
 
-
 # Login endpoint
 @app.route('/doctors/login', methods=['POST'])
 def login_doctor():
@@ -355,6 +354,7 @@ def health_check():
 # if __name__ == '__main__':
 #     app.run(debug=True, host='0.0.0.0', port=8012, use_reloader=False)
 
+
 def lambda_handler(event, context):
     response = awsgi.response(app, event, context)
 
@@ -385,6 +385,8 @@ def lambda_handler(event, context):
     }
 
     return modified_response
+
+
 
 
 
