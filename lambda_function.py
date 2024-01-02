@@ -224,7 +224,7 @@ def get_doctor(doctor_id):
 # Retrieve doctor info
 @app.route('/doctors/private/<int:doctor_id>', methods=['GET'])
 @token_required
-def get_doctor(doctor_id):
+def get_doctor_private(doctor_id):
     doctor = Doctor.query.filter_by(DoctorID=doctor_id).first()
 
     if not doctor:
@@ -323,7 +323,7 @@ def get_current_delay(doctor_id):
 
 @app.route('/delays/private/<int:doctor_id>', methods=['GET'])
 @token_required
-def get_current_delay(doctor_id):
+def get_current_delay_private(doctor_id):
     delay = Delay.query.filter_by(DoctorID=doctor_id).first()
     if not delay:
         return jsonify({'message': 'No delay entry found for this doctor'}), 404
