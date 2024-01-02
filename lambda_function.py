@@ -91,24 +91,26 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = request.cookies.get('token')
-        print(token)
         if not token:
             return jsonify({'message': 'Token is missing!'}), 401
+
         try:
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
             current_user = Doctor.query.filter_by(DoctorID=data['doctor_id']).first()
-            if current_user is None:
-                raise InvalidTokenError("User not found.")
-        except ExpiredSignatureError:
-            return jsonify({'message': 'Token has expired!'}), 401
-        except (InvalidTokenError, DecodeError) as e:
+            if not current_user:
+                return jsonify({'message': 'Token is invalid!'}), 401
+        except (ExpiredSignatureError, InvalidTokenError, DecodeError) as e:
             return jsonify({'message': 'Token is invalid!'}), 401
         except Exception as e:
             return jsonify({'message': 'Unable to validate token.'}), 500
 
+        # Check if 'doctor_id' is in kwargs and remove it if found
+        kwargs.pop('doctor_id', None)
+
         return f(current_user, *args, **kwargs)
 
     return decorated
+
 
 
 
