@@ -128,22 +128,29 @@ def login_doctor():
         return jsonify({'message': 'Doctor not found or password is wrong'}), 401
 
     
-# Fetch doctorID after login was successful.
 @app.route('/doctors/me', methods=['GET'])
 @token_required
 def get_current_doctor(current_user):
     # current_user is already populated by the @token_required decorator
-    # so you just need to return the necessary data
+    # Use current_user.DoctorID to get the doctor's information
+
+    doctor = Doctor.query.filter_by(DoctorID=current_user.DoctorID).first()
+    if not doctor:
+        return jsonify({'message': 'Doctor not found'}), 404
+
+    # Returning detailed information of the doctor
     doctor_data = {
-        'doctor_id': current_user.DoctorID,
-        'name': current_user.Name,
-        'specialty': current_user.Specialty,
-        'city': current_user.City,
-        'email': current_user.Email,
-        'phone_number': current_user.PhoneNumber,
-        'hospital_name': current_user.HospitalName
+        'doctor_id': doctor.DoctorID,
+        'name': doctor.Name,
+        'specialty': doctor.Specialty,
+        'city': doctor.City,
+        'email': doctor.Email,
+        'phone_number': doctor.PhoneNumber,
+        'hospital_name': doctor.HospitalName
     }
+
     return jsonify({'doctor': doctor_data}), 200
+
     
 
 @app.route('/logout', methods=['POST'])
