@@ -371,13 +371,6 @@ def lambda_handler(event, context):
         "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,OPTIONS"
     }
 
-    # Ensure the response headers include any Set-Cookie headers
-    if 'multiValueHeaders' in response and 'Set-Cookie' in response['multiValueHeaders']:
-        print("We are here")
-        cookies = response['multiValueHeaders']['Set-Cookie']
-        response_headers['Set-Cookie'] = cookies
-        print("Cookie:", cookies)
-
     # Construct the modified response
     modified_response = {
         "isBase64Encoded": False,
@@ -387,7 +380,14 @@ def lambda_handler(event, context):
         "body": response['body']
     }
 
+    # Check if 'Set-Cookie' is in the Flask response headers and add it to the multiValueHeaders
+    flask_response_headers = response.get('headers', {})
+    if 'Set-Cookie' in flask_response_headers:
+        # AWS API Gateway expects the 'Set-Cookie' header to be in multiValueHeaders
+        modified_response['multiValueHeaders']['Set-Cookie'] = [flask_response_headers['Set-Cookie']]
+
     return modified_response
+
 
 
 
