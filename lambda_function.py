@@ -170,7 +170,7 @@ def login_doctor():
         response.set_cookie('token', token, httponly=True, path='/', secure=True, samesite='None')
         
         # Print the Set-Cookie header if it's been set
-        print("Set-Cookie Header please daddy:", response.headers.get('Set-Cookie'))
+        print("Set-Cookie Header:", response.headers.get('Set-Cookie'))
 
         return response, 200
     else:
@@ -373,8 +373,10 @@ def lambda_handler(event, context):
 
     # Ensure the response headers include any Set-Cookie headers
     if 'multiValueHeaders' in response and 'Set-Cookie' in response['multiValueHeaders']:
+        print("We are here")
         cookies = response['multiValueHeaders']['Set-Cookie']
         response_headers['Set-Cookie'] = cookies
+        print("Cookie:", cookies)
 
     # Construct the modified response
     modified_response = {
