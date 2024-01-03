@@ -151,8 +151,31 @@ def get_current_doctor(current_user):
 
     return jsonify({'doctor': doctor_data}), 200
 
-    
+@app.route('/doctors/private/<int:doctor_id>', methods=['GET'])
+@token_required
+def get_doctor_private(current_user, doctor_id):
+    # Ensure the current user is the doctor whose delay is being updated
+    if current_user.DoctorID != doctor_id:
+        return jsonify({'message': 'Permission denied'}), 403
 
+    doctor = Doctor.query.filter_by(DoctorID=current_user.DoctorID).first()
+    if not doctor:
+        return jsonify({'message': 'Doctor not found'}), 404
+
+    # Returning detailed information of the doctor
+    doctor_data = {
+        'doctor_id': doctor.DoctorID,
+        'name': doctor.Name,
+        'specialty': doctor.Specialty,
+        'city': doctor.City,
+        'email': doctor.Email,
+        'phone_number': doctor.PhoneNumber,
+        'hospital_name': doctor.HospitalName
+    }
+
+    return jsonify({'doctor': doctor_data}), 200
+
+    
 @app.route('/logout', methods=['POST'])
 def logout():
     response = make_response(jsonify({'message': 'Logout successful'}))
