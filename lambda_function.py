@@ -179,8 +179,18 @@ def get_doctor_private(current_user, doctor_id):
 @app.route('/logout', methods=['POST'])
 def logout():
     response = make_response(jsonify({'message': 'Logout successful'}))
-    response.delete_cookie('token')
+    response.set_cookie(
+        'token', 
+        value='', 
+        expires=0, 
+        path='/', 
+        domain='hhd09d017j.execute-api.eu-north-1.amazonaws.com', 
+        secure=True, 
+        httponly=True, 
+        samesite='None' 
+    )
     return response
+
 
 # Retrieve doctor info
 @app.route('/doctors/<int:doctor_id>', methods=['GET'])
