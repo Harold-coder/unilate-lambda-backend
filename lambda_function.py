@@ -180,16 +180,17 @@ def get_doctor_private(current_user, doctor_id):
 def logout():
     response = make_response(jsonify({'message': 'Logout successful'}))
     response.set_cookie(
-        'token', 
-        value='', 
-        expires=0, 
-        path='/', 
-        domain='hhd09d017j.execute-api.eu-north-1.amazonaws.com', 
+        'token',
+        value='',
+        expires=0,
+        path='/', # Ensure this matches the path set during login
+        # Omit the 'Domain' if it was not set during login
         secure=True, 
-        httponly=True, 
-        samesite='None' 
+        httponly=True,
+        samesite='None' # Ensure your site is served over HTTPS
     )
     return response
+
 
 
 # Retrieve doctor info
