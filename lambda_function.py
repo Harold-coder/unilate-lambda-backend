@@ -270,7 +270,7 @@ def delete_doctor(current_user, doctor_id):
     if current_user.DoctorID != doctor_id:
         return jsonify({'message': 'Permission denied'}), 403
 
-    doctor = Doctor.query.get(doctor_id)
+    doctor = Doctor.query.filter_by(DoctorID=doctor_id).first()
     if doctor:
         db.session.delete(doctor)
         db.session.commit()
