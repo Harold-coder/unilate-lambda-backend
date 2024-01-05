@@ -262,6 +262,22 @@ def update_doctor_password(current_user, doctor_id):
         return jsonify({'message': 'Password updated successfully'}), 200
     else:
         return jsonify({'message': 'Doctor not found'}), 404
+    
+
+@app.route('/doctors/delete/<int:doctor_id>', methods=['DELETE'])
+@token_required
+def delete_doctor(current_user, doctor_id):
+    if current_user.DoctorID != doctor_id:
+        return jsonify({'message': 'Permission denied'}), 403
+
+    doctor = Doctor.query.get(doctor_id)
+    if doctor:
+        db.session.delete(doctor)
+        db.session.commit()
+        return jsonify({'message': 'Doctor account deleted successfully'}), 200
+    else:
+        return jsonify({'message': 'Doctor not found'}), 404
+
 
 
 @app.route('/delays/<int:doctor_id>', methods=['PUT'])
