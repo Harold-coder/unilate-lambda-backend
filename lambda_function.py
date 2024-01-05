@@ -35,6 +35,7 @@ class Doctor(db.Model):
     PhoneNumber = db.Column(db.String(20))  
     HospitalName = db.Column(db.String(255))  
     PasswordHash = db.Column(db.String(255))  
+    Picture = db.Column(db.String(255), default='man-white-brown') 
 
     def set_password(self, password):
         self.PasswordHash = generate_password_hash(password)  
@@ -86,13 +87,15 @@ def token_required(f):
 @app.route('/doctors/register', methods=['POST'])
 def register_doctor():
     data = request.get_json()
+    picture = data.get('picture', 'man-white-brown')  # Get the picture from the request, or use the default
     doctor = Doctor(
         Name=data['name'],
         Specialty=data['specialty'],
         City=data['city'],
         Email=data['email'],
         PhoneNumber=data['phone_number'],
-        HospitalName=data['hospital_name']
+        HospitalName=data['hospital_name'],
+        Picture=picture
     )
     doctor.set_password(data['password'])
     db.session.add(doctor)
@@ -146,7 +149,8 @@ def get_current_doctor(current_user):
         'city': doctor.City,
         'email': doctor.Email,
         'phone_number': doctor.PhoneNumber,
-        'hospital_name': doctor.HospitalName
+        'hospital_name': doctor.HospitalName,
+        'picture': doctor.Picture
     }
 
     return jsonify({'doctor': doctor_data}), 200
@@ -170,7 +174,8 @@ def get_doctor_private(current_user, doctor_id):
         'city': doctor.City,
         'email': doctor.Email,
         'phone_number': doctor.PhoneNumber,
-        'hospital_name': doctor.HospitalName
+        'hospital_name': doctor.HospitalName,
+        'picture': doctor.Picture
     }
 
     return jsonify({'doctor': doctor_data}), 200
@@ -208,7 +213,8 @@ def get_doctor(doctor_id):
         'city': doctor.City,
         'email': doctor.Email,
         'phone_number': doctor.PhoneNumber,
-        'hospital_name': doctor.HospitalName
+        'hospital_name': doctor.HospitalName,
+        'picture': doctor.Picture
     }
 
     return jsonify({'doctor': doctor_data}), 200
@@ -232,6 +238,7 @@ def update_doctor(current_user, doctor_id):
     doctor.Email = data.get('email', doctor.Email)
     doctor.PhoneNumber = data.get('phone_number', doctor.PhoneNumber)
     doctor.HospitalName = data.get('hospital_name', doctor.HospitalName)
+    doctor.Picture = data.get('picture', doctor.Picture)
 
     db.session.commit()
 
@@ -318,7 +325,8 @@ def search_doctors():
         'city': doctor.City,
         'email': doctor.Email,
         'phone_number': doctor.PhoneNumber,
-        'hospital_name': doctor.HospitalName
+        'hospital_name': doctor.HospitalName,
+        'picture': doctor.Picture
     } for doctor in doctors]
 
     return jsonify({'doctors': doctors_data})
@@ -334,7 +342,8 @@ def get_all_doctors():
         'city': doctor.City,
         'email': doctor.Email,
         'phone_number': doctor.PhoneNumber,
-        'hospital_name': doctor.HospitalName
+        'hospital_name': doctor.HospitalName,
+        'picture': doctor.Picture
     } for doctor in doctors]
 
     return jsonify({'doctors': doctors_data})
