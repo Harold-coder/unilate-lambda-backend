@@ -270,13 +270,24 @@ def delete_doctor(current_user, doctor_id):
     if current_user.DoctorID != doctor_id:
         return jsonify({'message': 'Permission denied'}), 403
 
+    # First, find and delete the delay entry associated with the doctor
+    delay = Delay.query.filter_by(DoctorID=doctor_id).first()
+    if delay:
+        db.session.delete(delay)
+
+    # Then, find and delete the doctor
     doctor = Doctor.query.filter_by(DoctorID=doctor_id).first()
     if doctor:
         db.session.delete(doctor)
-        db.session.commit()
-        return jsonify({'message': 'Doctor account deleted successfully'}), 200
+        try:
+            db.session.commit()
+            return jsonify({'message': 'Doctor account deleted successfully'}), 200
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'error': str(e)}), 500
     else:
         return jsonify({'message': 'Doctor not found'}), 404
+
 
 
 
