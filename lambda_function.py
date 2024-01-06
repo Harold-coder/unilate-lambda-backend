@@ -14,8 +14,8 @@ import os
 
 app = Flask(__name__)
 CORS(app, resources={
-    r"/doctors/*": {"origins": ["https://main.d2wombrdtqg6aq.amplifyapp.com", "http://localhost:3000"], "supports_credentials": True},
-    r"/delays/*": {"origins": ["https://main.d2wombrdtqg6aq.amplifyapp.com", "http://localhost:3000"], "supports_credentials": True}
+    r"/doctors/*": {"origins": ["https://www.unilate.be", "https://dev.unilate.be", "http://localhost:3000"], "supports_credentials": True},
+    r"/delays/*": {"origins": ["https://www.unilate.be", "https://dev.unilate.be/", "http://localhost:3000"], "supports_credentials": True}
 }, allow_headers=["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key", "x-access-tokens"])
 
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
@@ -391,7 +391,7 @@ def lambda_handler(event, context):
 
     # Check if the headers exist in the event and set the origin accordingly
     headers = event.get('headers', {})
-    origin = headers.get('origin') if headers else 'https://main.d2wombrdtqg6aq.amplifyapp.com'
+    origin = headers.get('origin') if headers else 'https://www.unilate.be'
 
     # Prepare the response headers
     response_headers = {
