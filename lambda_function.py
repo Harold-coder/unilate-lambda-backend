@@ -18,9 +18,11 @@ CORS(app, resources={
     r"/delays/*": {"origins": ["https://www.unilate.be", "https://dev.unilate.be/", "http://localhost:3000"], "supports_credentials": True}
 }, allow_headers=["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key", "x-access-tokens"])
 
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 # app.config['SECRET_KEY'] = SECRET_KEY
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://admin:password@unilate-test.cl020ce0qv5c.eu-north-1.rds.amazonaws.com/unilate'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+username = os.getenv('username')
+password = os.getenv('password')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@unilate-test.cl020ce0qv5c.eu-north-1.rds.amazonaws.com/unilate'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
