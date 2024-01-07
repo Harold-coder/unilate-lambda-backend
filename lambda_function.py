@@ -103,7 +103,14 @@ def register_doctor():
     db.session.add(doctor)
     try:
         db.session.commit()
-        return jsonify({'message': 'New doctor registered'}), 200
+        token = jwt.encode({
+            'doctor_id': doctor.DoctorID,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+        }, app.config['SECRET_KEY'], algorithm="HS256")
+        response = make_response(jsonify({'message': 'New doctor registered'}))
+        # Set the cookie
+        response.set_cookie('token', token, httponly=True, path='/', secure=True, samesite='None')
+        return response, 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
