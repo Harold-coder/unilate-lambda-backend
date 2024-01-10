@@ -8,6 +8,7 @@ import jwt
 import datetime
 import awsgi
 from functools import wraps
+import boto3
 # from config import SECRET_KEY
 import os
 
@@ -25,6 +26,8 @@ password = os.getenv('password')
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@unilate-test.cl020ce0qv5c.eu-north-1.rds.amazonaws.com/unilate'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+ses = boto3.client('ses')
 
 class Doctor(db.Model):
     __tablename__ = 'Doctors'
@@ -103,6 +106,26 @@ def register_doctor():
     db.session.add(doctor)
     try:
         db.session.commit()
+
+        ses.send_email(
+        Source='your-email@example.com',  # Replace with your verified SES email
+        Destination={
+            'ToAddresses': [
+                doctor.Email  # The doctor's email address
+            ]
+        },
+        Message={
+            'Subject': {
+                'Data': 'Welcome to Unilate'
+            },
+            'Body': {
+                'Text': {
+                    'Data': 'Welcome to Unilate!'
+                }
+            }
+        }
+    )
+
         token = jwt.encode({
             'doctor_id': doctor.DoctorID,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
