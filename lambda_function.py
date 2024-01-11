@@ -108,7 +108,7 @@ def register_doctor():
         db.session.commit()
 
         ses.send_email(
-        Source='your-email@example.com',  # Replace with your verified SES email
+        Source='harold.unilate@gmail.com',  # Replace with your verified SES email
         Destination={
             'ToAddresses': [
                 doctor.Email  # The doctor's email address
