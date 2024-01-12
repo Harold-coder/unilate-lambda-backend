@@ -28,6 +28,72 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 ses = boto3.client('ses')
+HTML_EMAIL_CONTENT = """
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #5383FF;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background-color: #ffffff;
+            padding: 20px;
+        }
+        .header {
+            background-color: #5383FF;
+            color: #ffffff;
+            padding: 10px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .content {
+            color: #333333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .footer {
+            background-color: #f2f2f2;
+            color: #333333;
+            text-align: center;
+            padding: 10px;
+            font-size: 14px;
+        }
+        #blue {
+            color: #5383FF;
+        }
+        a {
+            color: #5383FF;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            Bienvenue à Unilate
+        </div>
+        <div class="content">
+            <p>Bonjour,</p>
+            <p>Nous sommes ravis de vous accueillir sur <strong id="blue">Unilate</strong>, la plateforme révolutionnaire qui transforme l'expérience des rendez-vous médicaux en Belgique.</p>
+            <p>Si vous avez des questions ou besoin d'aide, n'hésitez pas à contacter notre équipe de support.</p>
+            <p>Cordialement,</p>
+            <p><strong id="blue">L'équipe Unilate</strong></p>
+        </div>
+        <div class="footer">
+            Commencez votre aventure sur notre <a href="https://www.unilate.be">site web</a>.
+        </div>
+    </div>
+</body>
+</html>
+
+"""
 
 class Doctor(db.Model):
     __tablename__ = 'Doctors'
@@ -108,23 +174,15 @@ def register_doctor():
         db.session.commit()
 
         ses.send_email(
-        Source='harold.unilate@gmail.com',  # Replace with your verified SES email
-        Destination={
-            'ToAddresses': [
-                doctor.Email  # The doctor's email address
-            ]
-        },
-        Message={
-            'Subject': {
-                'Data': 'Welcome to Unilate'
-            },
-            'Body': {
-                'Text': {
-                    'Data': 'Welcome to Unilate!'
+            Source='Unilate Team <harold.unilate@gmail.com>',
+            Destination={'ToAddresses': [doctor.Email]},
+            Message={
+                'Subject': {'Data': 'Welcome to Unilate'},
+                'Body': {
+                    'Html': {'Data': HTML_EMAIL_CONTENT}
                 }
             }
-        }
-    )
+        )
 
         token = jwt.encode({
             'doctor_id': doctor.DoctorID,
