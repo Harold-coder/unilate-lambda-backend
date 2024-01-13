@@ -424,8 +424,6 @@ def update_delay(current_user, doctor_id):
     delay.AnnouncementTimestamp = data.get('announcement_timestamp', delay.AnnouncementTimestamp)
 
     db.session.commit()
-    print(delay.StartTimestamp)
-    print(delay.EndTimestamp)
     notify_patients_of_delay(doctor_id, delay.StartTimestamp, delay.EndTimestamp)
 
     return jsonify({'message': 'Delay updated successfully'}), 200
@@ -479,7 +477,7 @@ def notify_patients_of_delay(doctor_id, start_time, end_time):
 
 
 def is_time_affected(doctor_start_time, doctor_end_time, patient_appointment_time):
-    return doctor_start_time <= patient_appointment_time <= doctor_end_time 
+    return int(doctor_start_time) <= patient_appointment_time <= int(doctor_end_time)
 
 @app.route('/delays/<int:doctor_id>', methods=['GET'])
 def get_current_delay(doctor_id):
