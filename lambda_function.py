@@ -120,9 +120,17 @@ class Delay(db.Model):
     DelayID = db.Column(db.Integer, primary_key=True)  
     DoctorID = db.Column(db.Integer, db.ForeignKey('Doctors.DoctorID'), nullable=False)  
     DelayDuration = db.Column(db.Integer, nullable=False)  
-    StartTimestamp = db.Column(db.DateTime, nullable=False)  
-    EndTimestamp = db.Column(db.DateTime, nullable=False)  
+    StartTimestamp = db.Column(db.Integer, nullable=False)  
+    EndTimestamp = db.Column(db.Integer, nullable=False)  
     AnnouncementTimestamp = db.Column(db.DateTime, nullable=False) 
+
+class PatientSubscription(db.Model):
+    __tablename__ = 'PatientSubscriptions'
+    
+    SubscriptionID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    DoctorID = db.Column(db.Integer, db.ForeignKey('Doctors.DoctorID'), nullable=False)
+    PatientPhoneNumber = db.Column(db.String(20), nullable=False)
+    AppointmentTime = db.Column(db.Integer, nullable=False)
 
 
 # Wrap db.create_all in an application context
@@ -379,6 +387,22 @@ def delete_doctor(current_user, doctor_id):
         return jsonify({'message': 'Doctor not found'}), 404
 
 
+@app.route('/subscribe', methods=['POST'])
+def subscribe():
+    data = request.get_json()
+    new_subscription = PatientSubscription(
+        DoctorID=data['doctor_id'],
+        PatientPhoneNumber=data['phone_number'],
+        AppointmentTime=data['appointment_time']
+    )
+    db.session.add(new_subscription)
+    try:
+        db.session.commit()
+        return jsonify({'message': 'Subscription successful'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 
 
 @app.route('/delays/<int:doctor_id>', methods=['PUT'])
@@ -400,7 +424,27 @@ def update_delay(current_user, doctor_id):
     delay.AnnouncementTimestamp = data.get('announcement_timestamp', delay.AnnouncementTimestamp)
 
     db.session.commit()
+
+    # Check for affected patients and send notifications
+    #notify_patients_of_delay(doctor_id, delay.StartTimeStamp, delay.EndTimeStamp)
+
     return jsonify({'message': 'Delay updated successfully'}), 200
+
+
+def notify_patients_of_delay(doctor_id, start_time, end_time):
+    subscriptions = PatientSubscription.query.filter_by(DoctorID=doctor_id).all()
+    sns_client = boto3.client('sns')
+    for subscription in subscriptions:
+        if is_time_affected(start_time, end_time, subscription.AppointmentTime):
+            sns_client.publish(
+                PhoneNumber=subscription.PatientPhoneNumber,
+                Message=f"Your appointment with Doctor ID {doctor_id} has been delayed. Please check the Unilate app for more details."
+            )
+            # TODO: Add the exact time of delay. 
+
+def is_time_affected(doctor_start_time, doctor_end_time, patient_appointment_time):
+    return doctor_start_time <= patient_appointment_time <= doctor_end_time 
+
 
 @app.route('/delays/<int:doctor_id>', methods=['GET'])
 def get_current_delay(doctor_id):
