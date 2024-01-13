@@ -441,6 +441,7 @@ def notify_patients_of_delay(doctor_id, start_time, end_time):
     sns_client = boto3.client('sns')
     for subscription in subscriptions:
         if is_time_affected(start_time, end_time, subscription.AppointmentTime):
+            print("We are sending the message!!")
             sns_client.publish(
                 PhoneNumber=subscription.PatientPhoneNumber,
                 Message=f"Votre docteur annonce du retard! Allez sur Unilate pour verifier!"
