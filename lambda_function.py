@@ -129,7 +129,7 @@ class PatientSubscription(db.Model):
     
     SubscriptionID = db.Column(db.Integer, primary_key=True, autoincrement=True)
     DoctorID = db.Column(db.Integer, db.ForeignKey('Doctors.DoctorID'), nullable=False)
-    PatientPhoneNumber = db.Column(db.String(20), nullable=False)
+    PatientEmail = db.Column(db.String(255), nullable=False) 
     AppointmentTime = db.Column(db.Integer, nullable=False)
 
 
@@ -392,7 +392,7 @@ def subscribe():
     data = request.get_json()
     new_subscription = PatientSubscription(
         DoctorID=data['doctor_id'],
-        PatientPhoneNumber=data['phone_number'],
+        PatientEmail=data['email'],
         AppointmentTime=data['appointment_time']
     )
     db.session.add(new_subscription)
@@ -438,19 +438,45 @@ def test_notification():
 
 def notify_patients_of_delay(doctor_id, start_time, end_time):
     subscriptions = PatientSubscription.query.filter_by(DoctorID=doctor_id).all()
-    sns_client = boto3.client('sns')
+    ses_client = boto3.client('ses')
+
     for subscription in subscriptions:
         if is_time_affected(start_time, end_time, subscription.AppointmentTime):
-            print("Let's try!")
             try:
-                print("We are trying!")
-                response = sns_client.publish(
-                    PhoneNumber=subscription.PatientPhoneNumber,
-                    Message=f"Votre docteur annonce du retard! Allez sur Unilate pour verifier!"
+                ses_response = ses_client.send_email(
+                    Source='Unilate Team <harold.unilate@gmail.com>',  # replace with your verified sender email address
+                    Destination={
+                        'ToAddresses': [subscription.PatientEmail]  # the recipient email address
+                    },
+                    Message={
+                        'Subject': {
+                            'Data': 'Notification de Retard du Docteur',
+                            'Charset': 'UTF-8'
+                        },
+                        'Body': {
+                            'Text': {
+                                'Data': "Votre docteur annonce du retard! Veuillez consulter Unilate pour plus d'informations.",
+                                'Charset': 'UTF-8'
+                            },
+                            'Html': {
+                                'Data': """
+                                <html>
+                                <head></head>
+                                <body>
+                                    <h1>Notification de Retard du Docteur</h1>
+                                    <p>Votre docteur a annoncé un retard. Veuillez consulter Unilate pour plus d'informations.</p>
+                                </body>
+                                </html>
+                                """,
+                                'Charset': 'UTF-8'
+                            }
+                        }
+                    }
                 )
-                print(f"Message sent! ID: {response['MessageId']}")
+                print(f"Email sent to {subscription.PatientEmail} with MessageId: {ses_response['MessageId']}")
             except Exception as e:
-                print(f"Failed to send SMS: {e}")
+                print(f"Failed to send email to {subscription.PatientEmail}: {e}")
+
 
 def is_time_affected(doctor_start_time, doctor_end_time, patient_appointment_time):
     return doctor_start_time <= patient_appointment_time <= doctor_end_time 
