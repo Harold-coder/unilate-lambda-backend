@@ -424,19 +424,43 @@ def update_delay(current_user, doctor_id):
     delay.AnnouncementTimestamp = data.get('announcement_timestamp', delay.AnnouncementTimestamp)
 
     db.session.commit()
-    notify_patients_of_delay(doctor_id, delay.StartTimestamp, delay.EndTimestamp)
+    notify_patients_of_delay(doctor_id, delay.StartTimestamp, delay.EndTimestamp, delay.DelayDuration)
 
     return jsonify({'message': 'Delay updated successfully'}), 200
 
-@app.route('/testNotification', methods=['POST'])
-def test_notification():
-
-    notify_patients_of_delay(21, 1, 24)
-    return jsonify({'message': 'Message sent!'}), 200
-
-def notify_patients_of_delay(doctor_id, start_time, end_time):
+def notify_patients_of_delay(doctor_id, start_time, end_time, delay_duration):
     subscriptions = PatientSubscription.query.filter_by(DoctorID=doctor_id).all()
     ses_client = boto3.client('ses')
+    HTML_NOTIFICATION_CONTENT = f"""
+        <html>
+        <head>
+        <style>
+        body {{ font-family: Arial, sans-serif; }}
+        .email-container {{ width: 100%; max-width: 600px; margin: auto; background-color: #f7f7f7; padding: 20px; }}
+        .email-content {{ background: #ffffff; padding: 20px; border-radius: 10px; }}
+        .header {{ color: #5383FF; font-size: 24px; text-align: center; margin-bottom: 20px; }}
+        .message-content {{ color: #333333; font-size: 16px; }}
+        .footer {{ margin-top: 20px; font-size: 12px; text-align: center; color: #888888; }}
+        a {{color: #5383FF;}}
+        </style>
+        </head>
+        <body>
+        <div class="email-container">
+            <div class="email-content">
+            <div class="header">Notification de Retard du Docteur</div>
+            <div class="message-content">
+                <p>Bonjour,</p>
+                <p>Votre docteur annonce maintenant <strong>${delay_duration} minutes de retard</strong> pour tous ses rendez-vous jusqu'à <strong>${end_time}h</strong>.</p>
+                <p>Consultez <a href="https://www.unilate.be" target="_blank">Unilate</a> pour plus d'informations.</p>
+            </div>
+            <div class="footer">
+                Ce message a été envoyé automatiquement. Veuillez ne pas y répondre directement.
+            </div>
+            </div>
+        </div>
+        </body>
+        </html>
+    """
 
     for subscription in subscriptions:
         if is_time_affected(start_time, end_time, subscription.AppointmentTime):
@@ -452,22 +476,7 @@ def notify_patients_of_delay(doctor_id, start_time, end_time):
                             'Charset': 'UTF-8'
                         },
                         'Body': {
-                            'Text': {
-                                'Data': "Votre docteur annonce du retard! Veuillez consulter Unilate pour plus d'informations.",
-                                'Charset': 'UTF-8'
-                            },
-                            'Html': {
-                                'Data': """
-                                <html>
-                                <head></head>
-                                <body>
-                                    <h1>Notification de Retard du Docteur</h1>
-                                    <p>Votre docteur a annoncé un retard. Veuillez consulter Unilate pour plus d'informations.</p>
-                                </body>
-                                </html>
-                                """,
-                                'Charset': 'UTF-8'
-                            }
+                            'Html': {'Data': HTML_NOTIFICATION_CONTENT}
                         }
                     }
                 )
