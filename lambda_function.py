@@ -426,7 +426,7 @@ def update_delay(current_user, doctor_id):
     db.session.commit()
 
     # Check for affected patients and send notifications
-    #notify_patients_of_delay(doctor_id, delay.StartTimeStamp, delay.EndTimeStamp)
+    notify_patients_of_delay(doctor_id, delay.StartTimeStamp, delay.EndTimeStamp)
 
     return jsonify({'message': 'Delay updated successfully'}), 200
 
@@ -438,7 +438,7 @@ def notify_patients_of_delay(doctor_id, start_time, end_time):
         if is_time_affected(start_time, end_time, subscription.AppointmentTime):
             sns_client.publish(
                 PhoneNumber=subscription.PatientPhoneNumber,
-                Message=f"Your appointment with Doctor ID {doctor_id} has been delayed. Please check the Unilate app for more details."
+                Message=f"Votre docteur annonce du retard! Allez sur Unilate pour verifier!"
             )
             # TODO: Add the exact time of delay. 
 
