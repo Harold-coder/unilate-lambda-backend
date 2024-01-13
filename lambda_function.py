@@ -442,7 +442,7 @@ def notify_patients_of_delay(doctor_id, start_time, end_time):
     for subscription in subscriptions:
         if is_time_affected(start_time, end_time, subscription.AppointmentTime):
             print("We are sending the message!!")
-            print(subscribe.PatientPhoneNumber)
+            print(subscription.PatientPhoneNumber)
             sns_client.publish(
                 PhoneNumber=subscription.PatientPhoneNumber,
                 Message=f"Votre docteur annonce du retard! Allez sur Unilate pour verifier!"
