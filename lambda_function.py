@@ -425,9 +425,6 @@ def update_delay(current_user, doctor_id):
 
     db.session.commit()
 
-    # Check for affected patients and send notifications
-    notify_patients_of_delay(doctor_id, delay.StartTimeStamp, delay.EndTimeStamp)
-
     return jsonify({'message': 'Delay updated successfully'}), 200
 
 @app.route('/testNotification', methods=['POST'])
