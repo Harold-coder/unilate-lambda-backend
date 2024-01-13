@@ -430,6 +430,11 @@ def update_delay(current_user, doctor_id):
 
     return jsonify({'message': 'Delay updated successfully'}), 200
 
+@app.route('/testNotification', methods=['POST'])
+def test_notification():
+
+    notify_patients_of_delay(21, 1, 24)
+    return jsonify({'message': 'Message sent!'}), 200
 
 def notify_patients_of_delay(doctor_id, start_time, end_time):
     subscriptions = PatientSubscription.query.filter_by(DoctorID=doctor_id).all()
@@ -444,7 +449,6 @@ def notify_patients_of_delay(doctor_id, start_time, end_time):
 
 def is_time_affected(doctor_start_time, doctor_end_time, patient_appointment_time):
     return doctor_start_time <= patient_appointment_time <= doctor_end_time 
-
 
 @app.route('/delays/<int:doctor_id>', methods=['GET'])
 def get_current_delay(doctor_id):
