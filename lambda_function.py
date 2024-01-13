@@ -450,7 +450,7 @@ def notify_patients_of_delay(doctor_id, start_time, end_time, delay_duration):
             <div class="header">Notification de Retard du Docteur</div>
             <div class="message-content">
                 <p>Bonjour,</p>
-                <p>Votre docteur annonce maintenant <strong>${delay_duration} minutes de retard</strong> pour tous ses rendez-vous jusqu'à <strong>${end_time}h</strong>.</p>
+                <p>Votre docteur annonce maintenant <strong>{delay_duration} minutes de retard</strong> pour tous ses rendez-vous jusqu'à <strong>{end_time}h</strong>.</p>
                 <p>Consultez <a href="https://www.unilate.be" target="_blank">Unilate</a> pour plus d'informations.</p>
             </div>
             <div class="footer">
