@@ -424,9 +424,9 @@ def update_delay(current_user, doctor_id):
     delay.AnnouncementTimestamp = data.get('announcement_timestamp', delay.AnnouncementTimestamp)
 
     db.session.commit()
-    print(delay.StartTimeStamp)
-    print(delay.EndTimeStamp)
-    notify_patients_of_delay(doctor_id, delay.StartTimeStamp, delay.EndTimeStamp)
+    print(delay.StartTimestamp)
+    print(delay.EndTimestamp)
+    notify_patients_of_delay(doctor_id, delay.StartTimestamp, delay.EndTimestamp)
 
     return jsonify({'message': 'Delay updated successfully'}), 200
 
