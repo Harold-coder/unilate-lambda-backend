@@ -441,13 +441,16 @@ def notify_patients_of_delay(doctor_id, start_time, end_time):
     sns_client = boto3.client('sns')
     for subscription in subscriptions:
         if is_time_affected(start_time, end_time, subscription.AppointmentTime):
-            print("We are sending the message!!")
-            print(subscription.PatientPhoneNumber)
-            sns_client.publish(
-                PhoneNumber=subscription.PatientPhoneNumber,
-                Message=f"Votre docteur annonce du retard! Allez sur Unilate pour verifier!"
-            )
-            # TODO: Add the exact time of delay. 
+            print("Let's try!")
+            try:
+                print("We are trying!")
+                response = sns_client.publish(
+                    PhoneNumber=subscription.PatientPhoneNumber,
+                    Message=f"Votre docteur annonce du retard! Allez sur Unilate pour verifier!"
+                )
+                print(f"Message sent! ID: {response['MessageId']}")
+            except Exception as e:
+                print(f"Failed to send SMS: {e}")
 
 def is_time_affected(doctor_start_time, doctor_end_time, patient_appointment_time):
     return doctor_start_time <= patient_appointment_time <= doctor_end_time 
